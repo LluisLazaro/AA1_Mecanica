@@ -40,7 +40,6 @@ public class PlanetariProbaClasse : MonoBehaviour
     {
         float distanceSquaredES = EarthPosition.magnitude * EarthPosition.magnitude;
         Vector2 unityVector = -EarthPosition.normalized;
-
         Vector2 acceleration = (GM / distanceSquaredES) * unityVector;
 
         return acceleration;
