@@ -1,4 +1,4 @@
-using System.Collections;
+ï»¿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -8,44 +8,66 @@ public class Planetari : MonoBehaviour
     public GameObject[] planets; 
 
     private List<Vector3> velocities = new List<Vector3>();
-    private List<Vector3> accelerations = new List<Vector3>();
     private List<Transform> planetTransforms = new List<Transform>();
 
-    public float totalTime = 10f;
-    private float timeMotion;
-    public float stepTime = 0.0001f;
+    public float stepTime = 0.00001f; 
     private float GM = 4 * Mathf.PI * Mathf.PI; 
+    private float scaleFactor = 10f;
+    private float[] initialDistances = { 0.39f, 0.72f, 1.0f, 1.52f, 5.2f, 9.58f, 19.22f, 30.05f };
+    private float[] initialVelocities = { 10.07f, 7.38f, 6.28f, 5.06f, 2.75f, 2.04f, 1.43f, 1.14f };
 
     void Start()
     {
-        timeMotion = 0f;
-        foreach (GameObject planet in planets)
+        for (int i = 0; i < planets.Length; i++)
         {
-           //aqui s'hauria de col·locar cada velocitat, acceleració i transforms de cada planeta
+            Vector3 initialPosition = new Vector3(initialDistances[i] * scaleFactor, 0, 0); 
+            Vector3 initialVelocity = new Vector3(0, initialVelocities[i], 0); 
+
+            planetTransforms.Add(planets[i].transform);
+            velocities.Add(initialVelocity);
+
+            planets[i].transform.position = initialPosition;
         }
     }
 
     void Update()
     {
-     
+        for (int i = 0; i < planets.Length; i++)
+        {
+            Vector3 acceleration = GravitationalAcceleration(planetTransforms[i].position);
+            (Vector3 newPosition, Vector3 newVelocity) = RungeKutta4(planetTransforms[i].position, velocities[i], acceleration);
+
+            planetTransforms[i].position = newPosition;
+            velocities[i] = newVelocity;
+        }
     }
 
-    //Aixo ns com fer-ho he possat en vector3 i ja
-    //Vector3 GravitationalAcceleration()
-    //{
-    //    float distanceSquaredES = EarthPosition.magnitude * EarthPosition.magnitude;
-    //    Vector2 unityVector = -EarthPosition.normalized;
-    //    Vector2 acceleration = (GM / distanceSquaredES) * unityVector;
-
-    //    return acceleration;
-    //}
-
-    (Vector3, Vector3, float) EulerMethod(Vector3 position, Vector3 velocity, Vector3 acceleration, float time)
+    Vector3 GravitationalAcceleration(Vector3 position)
     {
-        Vector3 newPosition = position + velocity * stepTime;
-        Vector3 newVelocity = velocity + acceleration * stepTime;
-        time += stepTime;
+        float distanceSquared = position.sqrMagnitude;
+        Vector3 unitVector = -position.normalized;
+        return (GM / distanceSquared) * unitVector;
+    }
 
-        return (newPosition, newVelocity, time);
+    (Vector3, Vector3) RungeKutta4(Vector3 position, Vector3 velocity, Vector3 acceleration)
+    {
+        Vector3 K1position, K1velocity, K2position, K2velocity, K3position, K3velocity, K4position, K4velocity;
+
+        K1position = velocity * stepTime;
+        K1velocity = acceleration * stepTime;
+
+        K2position = (velocity + 0.5f * K1velocity) * stepTime;
+        K2velocity = GravitationalAcceleration(position + 0.5f * K1position) * stepTime;
+
+        K3position = (velocity + 0.5f * K2velocity) * stepTime;
+        K3velocity = GravitationalAcceleration(position + 0.5f * K2position) * stepTime;
+
+        K4position = (velocity + K3velocity) * stepTime;
+        K4velocity = GravitationalAcceleration(position + K3position) * stepTime;
+
+        position += (K1position + 2 * K2position + 2 * K3position + K4position) / 6;
+        velocity += (K1velocity + 2 * K2velocity + 2 * K3velocity + K4velocity) / 6;
+
+        return (position, velocity);
     }
 }
