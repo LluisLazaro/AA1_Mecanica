@@ -4,70 +4,57 @@ using UnityEngine;
 
 public class Planetari : MonoBehaviour
 {
-    public Transform sun; 
-    public GameObject[] planets; 
+    private Vector3 planetPosition;
+    private Vector3 planetVelocity;
+    public float Mass = 1.66f + Mathf.Pow(10, -7);
 
-    private List<Vector3> velocities = new List<Vector3>();
-    private List<Transform> planetTransforms = new List<Transform>();
-
-    public float stepTime = 0.00001f; 
-    private float GM = 4 * Mathf.PI * Mathf.PI; 
-    private float scaleFactor = 10f;
-    private float[] initialDistances = { 0.39f, 0.72f, 1.0f, 1.52f, 5.2f, 9.58f, 19.22f, 30.05f };
-    private float[] initialVelocities = { 10.07f, 7.38f, 6.28f, 5.06f, 2.75f, 2.04f, 1.43f, 1.14f };
+    public float stepTime = 0.0001f;
+    private float GM = 39.478f;
+    public Vector3 initialVelocity = new Vector3(0, 0, 10.07f); 
+    public Vector3 initialPosition = new Vector3(0.39f, 0, 0); 
+    private float time = 0;
 
     void Start()
     {
-        for (int i = 0; i < planets.Length; i++)
-        {
-            Vector3 initialPosition = new Vector3(initialDistances[i] * scaleFactor, 0, 0); 
-            Vector3 initialVelocity = new Vector3(0, initialVelocities[i], 0); 
-
-            planetTransforms.Add(planets[i].transform);
-            velocities.Add(initialVelocity);
-
-            planets[i].transform.position = initialPosition;
-        }
+        transform.position = initialPosition;
+        planetPosition = initialPosition;
+        planetVelocity = initialVelocity;
+        time = 0;
     }
 
     void Update()
     {
-        for (int i = 0; i < planets.Length; i++)
-        {
-            Vector3 acceleration = GravitationalAcceleration(planetTransforms[i].position);
-            (Vector3 newPosition, Vector3 newVelocity) = RungeKutta4(planetTransforms[i].position, velocities[i], acceleration);
-
-            planetTransforms[i].position = newPosition;
-            velocities[i] = newVelocity;
-        }
+        
+        (planetPosition, planetVelocity, time) = RungeKutta4(planetPosition, planetVelocity, time);
+        transform.position = (planetPosition * 10f);
     }
 
     Vector3 GravitationalAcceleration(Vector3 position)
     {
         float distanceSquared = position.sqrMagnitude;
-        Vector3 unitVector = -position.normalized;
-        return (GM / distanceSquared) * unitVector;
+        Vector3 directionVector = -position.normalized;
+        Vector3 acceleration = (GM / distanceSquared) * directionVector; ;
+        return acceleration;
     }
 
-    (Vector3, Vector3) RungeKutta4(Vector3 position, Vector3 velocity, Vector3 acceleration)
+    (Vector3, Vector3, float) RungeKutta4(Vector3 position, Vector3 velocity, float time)
     {
         Vector3 K1position, K1velocity, K2position, K2velocity, K3position, K3velocity, K4position, K4velocity;
 
-        K1position = velocity * stepTime;
-        K1velocity = acceleration * stepTime;
+        (K1position, K1velocity) = DifferentialFunction(position, velocity);
+        (K2position, K2velocity) = DifferentialFunction(position + 0.5f * stepTime * K1position, velocity + 0.5f * stepTime * K1velocity);
+        (K3position, K3velocity) = DifferentialFunction(position + 0.5f * stepTime * K2position, velocity + 0.5f * stepTime * K2velocity);
+        (K4position, K4velocity) = DifferentialFunction(position + stepTime * K3position, velocity + stepTime * K3velocity);
 
-        K2position = (velocity + 0.5f * K1velocity) * stepTime;
-        K2velocity = GravitationalAcceleration(position + 0.5f * K1position) * stepTime;
+        Vector3 newPosition = position + (stepTime / 6f) * (K1position + 2f * K2position + 2f * K3position + K4position);
+        Vector3 newVelocity = velocity + (stepTime / 6f) * (K1velocity + 2f * K2velocity + 2f * K3velocity + K4velocity);
+        float newTime = time + stepTime;
 
-        K3position = (velocity + 0.5f * K2velocity) * stepTime;
-        K3velocity = GravitationalAcceleration(position + 0.5f * K2position) * stepTime;
+        return (newPosition, newVelocity, newTime);
+    }
 
-        K4position = (velocity + K3velocity) * stepTime;
-        K4velocity = GravitationalAcceleration(position + K3position) * stepTime;
-
-        position += (K1position + 2 * K2position + 2 * K3position + K4position) / 6;
-        velocity += (K1velocity + 2 * K2velocity + 2 * K3velocity + K4velocity) / 6;
-
-        return (position, velocity);
+    private (Vector3 position, Vector3 velocity) DifferentialFunction(Vector3 position, Vector3 velocity)
+    {
+        return (velocity, GravitationalAcceleration(position));
     }
 }
