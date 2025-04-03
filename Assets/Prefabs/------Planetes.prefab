@@ -382,7 +382,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 0863819443687d9488ad225b1d8dd2d0, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  planetPosition: {x: 0, y: 0, z: 0}
+  planetPosition: {x: 0.72, y: 0, z: 0}
   planetVelocity: {x: 0, y: 0, z: 7.38}
   Mass: 0.00000245
   stepTime: 0.0001
@@ -1258,7 +1258,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 0863819443687d9488ad225b1d8dd2d0, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  planetPosition: {x: 0, y: 0, z: 0}
+  planetPosition: {x: 0.39, y: 0, z: 0}
   planetVelocity: {x: 0, y: 0, z: 10.07}
   Mass: 0.000000166
   stepTime: 0.0001
