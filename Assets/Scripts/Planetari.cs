@@ -19,15 +19,17 @@ public class Planetari : MonoBehaviour
     {
         trailRenderer = GetComponent<TrailRenderer>();
         trailRenderer.enabled = false;
-        Initialize(planetPosition, planetVelocity);
     }
 
     public void Initialize(Vector3 initialPosition, Vector3 initialVelocity)
     {
-        planetPosition = initialPosition;
+        planetPosition = initialPosition;  // Mantén la posición original sin cambios
         planetVelocity = initialVelocity;
-        planetPosition = planetPosition * 2f; // escala per visualització
+
+        // Escala solo la visualización para la cámara
+        transform.position = initialPosition * 2f; // Esto solo afecta la visualización
     }
+
 
     public void SetAcceleration(Vector3 acc)
     {
