@@ -15,13 +15,33 @@ public class Planetari : MonoBehaviour
     private Vector3 netAcceleration;
     private bool hasActivatedTrail = false;
 
-    private void Start()
+	public PlanetHUD planetHUD;
+    int speedIndex;
+
+	private void Start()
     {
         trailRenderer = GetComponent<TrailRenderer>();
         trailRenderer.enabled = false;
     }
 
-    public void Initialize(Vector3 initialPosition, Vector3 initialVelocity)
+	private void Update()
+	{
+		speedIndex = planetHUD.speedIndex;
+		switch (speedIndex)
+		{
+			case 1:
+				stepTime = 0.0001f;
+				break;
+			case 2:
+				stepTime = 0.0005f;
+				break;
+			case 3:
+				stepTime = 0.001f;
+				break;
+		}
+	}
+
+	public void Initialize(Vector3 initialPosition, Vector3 initialVelocity)
     {
         planetPosition = initialPosition;  // Mantén la posición original sin cambios
         planetVelocity = initialVelocity;
@@ -69,9 +89,25 @@ public class Planetari : MonoBehaviour
         return (velocity, acceleration);
     }
 
-    public void SetStepTime(float newStepTime)
-    {
-        stepTime = newStepTime;
-    }
+	public void SpeedTimeUp()
+	{
+		if (speedIndex < 5)
+		{
+			speedIndex++;
+		}
+	}
+
+	public void SlowTimeDown()
+	{
+		if (speedIndex > 0)
+		{
+			speedIndex--;
+		}
+	}
+
+	//public void SetStepTime(float newStepTime)
+ //   {
+ //       stepTime = newStepTime;
+ //   }
 
 }

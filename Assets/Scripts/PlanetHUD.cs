@@ -5,104 +5,111 @@ using UnityEngine.UI;
 
 public class PlanetHUD : MonoBehaviour
 {
-    [Header("Planetes i Visuals")]
-    public List<Planetari> allPlanets;
-    public Text hudText;
+	[Header("Càmera")]
+	public Camera mainCamera;
+	public float zoomSpeed = 20f;
+	public float minZoom = 10f;
+	public float maxZoom = 2000f;
+	public Vector3 initialOffset = new Vector3(0, 250, -250);
 
-    [Header("Càmera")]
-    public Camera mainCamera;
-    private Vector3 solarViewOffset = new Vector3(0, 250, -250);
-    public float zoomSpeed = 20f;
-    public float minZoom = 10f;
-    public float maxZoom = 1000f;
+	[Header("Controls de càmera")]
+	public float mouseSensitivity = 3f;
+	public float moveSpeed = 50f;
 
-    [Header("Vista del sistema solar")]
-    public Vector3 solarViewLookAt = Vector3.zero;
+	private Vector3 cameraOffset;
+	private Vector3 lookAt = Vector3.zero;
+	private float rotationX = 0f;
+	private float rotationY = 0f;
 
-    private Vector3 cameraOffset;
-    private Planetari target;
-    private int currentIndex;
-    private float GM = 39.478f;
+	public int speedIndex = 1;
+	public Text speedText;
 
-    [Header("Control del Temps")]
-    public Button speedUpButton;
-    public Button slowDownButton; // Nuevo botón para ralentizar el tiempo
-    private float timeMultiplier = 2f;
-    private float timeDivider = 0.5f; // Factor para ralentizar
+	void Start()
+	{
+		if (mainCamera == null)
+			mainCamera = Camera.main;
 
-    void Start()
-    {
-        if (mainCamera == null)
-            mainCamera = Camera.main;
+		cameraOffset = initialOffset;
 
-        currentIndex = allPlanets.Count;
-        target = null;
-        cameraOffset = solarViewOffset;
+		float initialDistance = cameraOffset.magnitude;
+		if (maxZoom < initialDistance)
+			maxZoom = initialDistance + 500f;
+	}
 
-        float initialDistance = solarViewOffset.magnitude;
-        if (maxZoom < initialDistance)
-            maxZoom = initialDistance + 200f;
+	void Update()
+	{
+		if (speedText != null)
+		{
+			speedText.text = speedIndex.ToString();
+		}
 
-        // Asignar eventos a los botones
-        if (speedUpButton != null)
-            speedUpButton.onClick.AddListener(SpeedTimeUp);
-        if (slowDownButton != null)
-            slowDownButton.onClick.AddListener(SlowTimeDown);
-    }
+		HandleCameraControls();
+	}
 
-    void Update()
-    {
-        if (hudText == null) return;
+	public void SpeedTimeUp()
+	{
+		if(speedIndex < 3) {
+			speedIndex++;
+		}
+	}
 
-        // Zoom amb la rodeta del ratolí
-        float scroll = Input.GetAxis("Mouse ScrollWheel");
-        if (Mathf.Abs(scroll) > 0.001f)
-        {
-            float distance = cameraOffset.magnitude;
-            distance -= scroll * zoomSpeed;
-            distance = Mathf.Clamp(distance, minZoom, maxZoom);
-            cameraOffset = cameraOffset.normalized * distance;
-        }
+	public void SlowTimeDown()
+	{
+		if (speedIndex > 1)
+		{
+			speedIndex--;
+		}
+	}
 
-        // Mostrar informació
-        if (target != null)
-        {
-            hudText.text = $"{target.name}";
-        }
-        else
-        {
-            hudText.text = "Sistema Solar";
-        }
+	void HandleCameraControls()
+	{
+		// Rotació amb clic esquerre
+		if (Input.GetMouseButton(0))
+		{
+			rotationX += Input.GetAxis("Mouse X") * mouseSensitivity;
+			rotationY -= Input.GetAxis("Mouse Y") * mouseSensitivity;
+			rotationY = Mathf.Clamp(rotationY, -85f, 85f);
+		}
 
-        if (mainCamera != null)
-        {
-            if (target != null)
-            {
-                Vector3 lookAt = target.transform.position;
-                mainCamera.transform.position = lookAt + cameraOffset;
-                mainCamera.transform.LookAt(lookAt);
-            }
-            else
-            {
-                mainCamera.transform.position = solarViewLookAt + cameraOffset;
-                mainCamera.transform.LookAt(solarViewLookAt);
-            }
-        }
-    }
+		// Zoom amb scroll
+		float scroll = Input.GetAxis("Mouse ScrollWheel");
+		if (Mathf.Abs(scroll) > 0.001f)
+		{
+			float distance = cameraOffset.magnitude;
+			distance -= scroll * zoomSpeed;
+			distance = Mathf.Clamp(distance, minZoom, maxZoom);
+			cameraOffset = cameraOffset.normalized * distance;
+		}
 
-    public void SpeedTimeUp()
-    {
-        foreach (Planetari planet in allPlanets)
-        {
-            planet.SetStepTime(planet.stepTime * timeMultiplier);
-        }
-    }
+		// Posicionament de la càmera
+		Quaternion rotation = Quaternion.Euler(rotationY, rotationX, 0f);
+		Vector3 offset = rotation * Vector3.forward * cameraOffset.magnitude;
 
-    public void SlowTimeDown()
-    {
-        foreach (Planetari planet in allPlanets)
-        {
-            planet.SetStepTime(planet.stepTime * timeDivider);
-        }
-    }
+		mainCamera.transform.position = lookAt - offset;
+		mainCamera.transform.LookAt(lookAt);
+
+		if (Input.GetMouseButton(2))
+		{
+			float panSpeed = cameraOffset.magnitude * 0.012f;
+
+			float deltaX = Input.GetAxisRaw("Mouse X");
+			float deltaY = Input.GetAxisRaw("Mouse Y");
+
+			Vector3 moveCam = (-mainCamera.transform.right * deltaX + -mainCamera.transform.up * deltaY) * panSpeed;
+
+			lookAt += moveCam;
+		}
+
+		// Moviment amb WASD
+		Vector3 move = Vector3.zero;
+		if (Input.GetKey(KeyCode.W)) move += mainCamera.transform.forward;
+		if (Input.GetKey(KeyCode.S)) move -= mainCamera.transform.forward;
+		if (Input.GetKey(KeyCode.A)) move -= mainCamera.transform.right;
+		if (Input.GetKey(KeyCode.D)) move += mainCamera.transform.right;
+
+		if (move != Vector3.zero)
+		{
+			lookAt += move * moveSpeed * Time.deltaTime;
+		}
+	}
 }
