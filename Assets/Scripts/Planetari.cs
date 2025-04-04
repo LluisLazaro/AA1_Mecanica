@@ -18,12 +18,14 @@ public class Planetari : MonoBehaviour
 	public PlanetHUD planetHUD;
     int speedIndex;
 
+	// S'executa al començar: desactiva el TrailRenderer fins que comenci la simulació
 	private void Start()
     {
         trailRenderer = GetComponent<TrailRenderer>();
         trailRenderer.enabled = false;
     }
 
+	// Actualitza la velocitat de simulació segons la configuració de l'HUD
 	private void Update()
 	{
 		speedIndex = planetHUD.speedIndex;
@@ -43,52 +45,69 @@ public class Planetari : MonoBehaviour
 
 	public void Initialize(Vector3 initialPosition, Vector3 initialVelocity)
     {
-        planetPosition = initialPosition;  // Mantén la posición original sin cambios
+		// Inicialitza la posició i velocitat inicial del planeta
+		planetPosition = initialPosition;
         planetVelocity = initialVelocity;
 
-        // Escala solo la visualización para la cámara
-        transform.position = initialPosition * 2f; // Esto solo afecta la visualización
+		// Col·loca el planeta visualment en una posició escalar per a millor visibilitat
+		transform.position = initialPosition * 2f;
     }
 
-
-    public void SetAcceleration(Vector3 acc)
+	// Assigna l'acceleració total (calculada pel PlanetManager) que actuarà sobre aquest planeta
+	public void SetAcceleration(Vector3 acc)
     {
         netAcceleration = acc;
     }
 
-    public void SimulateStep()
+	// Simula un pas temporal del moviment del planeta
+	public void SimulateStep()
     {
-        (planetPosition, planetVelocity, time) = RungeKutta4(planetPosition, planetVelocity, time);
-        transform.position = planetPosition * 10f;
+		// Calcula la nova posició, velocitat i temps amb el mètode de Runge-Kutta
+		(planetPosition, planetVelocity, time) = RungeKutta4(planetPosition, planetVelocity, time);
+
+		// Actualitza la posició visual del planeta amb un factor d’escala per fer-lo visible a Unity
+		transform.position = planetPosition * 10f;
     }
 
-    (Vector3, Vector3, float) RungeKutta4(Vector3 position, Vector3 velocity, float time)
+	// Implementa el mètode de Runge-Kutta d'ordre 4 per calcular el següent estat físic del planeta
+	(Vector3, Vector3, float) RungeKutta4(Vector3 position, Vector3 velocity, float time)
     {
         Vector3 K1position, K1velocity, K2position, K2velocity, K3position, K3velocity, K4position, K4velocity;
 
-        (K1position, K1velocity) = DifferentialFunction(position, velocity, netAcceleration);
+		// Calcul per estimar els canvis de posició i velocitat en diferents punts dins del pas de temps.
+		// Cada calcul es basa en la informació de l’anterior, millorant així la precisió del càlcul final.
+		(K1position, K1velocity) = DifferentialFunction(position, velocity, netAcceleration);
         (K2position, K2velocity) = DifferentialFunction(position + 0.5f * stepTime * K1position, velocity + 0.5f * stepTime * K1velocity, netAcceleration);
         (K3position, K3velocity) = DifferentialFunction(position + 0.5f * stepTime * K2position, velocity + 0.5f * stepTime * K2velocity, netAcceleration);
         (K4position, K4velocity) = DifferentialFunction(position + stepTime * K3position, velocity + stepTime * K3velocity, netAcceleration);
 
-        Vector3 newPosition = position + (stepTime / 6f) * (K1position + 2f * K2position + 2f * K3position + K4position);
-        Vector3 newVelocity = velocity + (stepTime / 6f) * (K1velocity + 2f * K2velocity + 2f * K3velocity + K4velocity);
-        float newTime = time + stepTime;
+		// Càlcul de la nova posició amb una mitjana ponderada dels 4 valors
+		Vector3 newPosition = position + (stepTime / 6f) * (K1position + 2f * K2position + 2f * K3position + K4position);
 
-        if (!hasActivatedTrail)
+		// Càlcul de la nova velocitat amb el mateix principi
+		Vector3 newVelocity = velocity + (stepTime / 6f) * (K1velocity + 2f * K2velocity + 2f * K3velocity + K4velocity);
+
+		// Avança el temps simulat
+		float newTime = time + stepTime;
+
+		// Activa el Trail només un cop comenci el moviment
+		if (!hasActivatedTrail)
         {
             trailRenderer.enabled = true;
             hasActivatedTrail = true;
         }
 
-        return (newPosition, newVelocity, newTime);
+		// Retorna la nova posició, velocitat i temps perquè siguin aplicats al planeta
+		return (newPosition, newVelocity, newTime);
     }
 
-    (Vector3, Vector3) DifferentialFunction(Vector3 position, Vector3 velocity, Vector3 acceleration)
+	// Retorna la derivada de la posició (velocitat) i la derivada de la velocitat (acceleració), necessàries per RK4
+	(Vector3, Vector3) DifferentialFunction(Vector3 position, Vector3 velocity, Vector3 acceleration)
     {
         return (velocity, acceleration);
     }
 
+	// Incrementa l’índex de velocitat fins a un màxim
 	public void SpeedTimeUp()
 	{
 		if (speedIndex < 5)
@@ -97,6 +116,7 @@ public class Planetari : MonoBehaviour
 		}
 	}
 
+	// Redueix l’índex de velocitat fins a un mínim
 	public void SlowTimeDown()
 	{
 		if (speedIndex > 0)
@@ -104,10 +124,4 @@ public class Planetari : MonoBehaviour
 			speedIndex--;
 		}
 	}
-
-	//public void SetStepTime(float newStepTime)
- //   {
- //       stepTime = newStepTime;
- //   }
-
 }

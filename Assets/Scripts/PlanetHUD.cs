@@ -24,6 +24,7 @@ public class PlanetHUD : MonoBehaviour
 	public int speedIndex = 1;
 	public Text speedText;
 
+	// Inicialitza la càmera i estableix distància màxima de zoom
 	void Start()
 	{
 		if (mainCamera == null)
@@ -36,16 +37,18 @@ public class PlanetHUD : MonoBehaviour
 			maxZoom = initialDistance + 500f;
 	}
 
+	// Actualitza l'HUD i gestiona els controls de càmera cada frame
 	void Update()
 	{
 		if (speedText != null)
 		{
-			speedText.text = speedIndex.ToString();
+			speedText.text = "X " + speedIndex.ToString();
 		}
 
 		HandleCameraControls();
 	}
 
+	// Augmenta la velocitat de simulació (fins a màxim 3)
 	public void SpeedTimeUp()
 	{
 		if(speedIndex < 3) {
@@ -53,6 +56,7 @@ public class PlanetHUD : MonoBehaviour
 		}
 	}
 
+	// Disminueix la velocitat de simulació (mínim 1)
 	public void SlowTimeDown()
 	{
 		if (speedIndex > 1)
@@ -61,9 +65,10 @@ public class PlanetHUD : MonoBehaviour
 		}
 	}
 
+	// Controla el moviment, rotació i zoom de la càmera amb el ratolí i teclat
 	void HandleCameraControls()
 	{
-		// Rotació amb clic esquerre
+		// Rotació amb clic esquerre del ratolí
 		if (Input.GetMouseButton(0))
 		{
 			rotationX += Input.GetAxis("Mouse X") * mouseSensitivity;
@@ -71,7 +76,7 @@ public class PlanetHUD : MonoBehaviour
 			rotationY = Mathf.Clamp(rotationY, -85f, 85f);
 		}
 
-		// Zoom amb scroll
+		// Zoom amb la roda del ratolí
 		float scroll = Input.GetAxis("Mouse ScrollWheel");
 		if (Mathf.Abs(scroll) > 0.001f)
 		{
@@ -81,13 +86,14 @@ public class PlanetHUD : MonoBehaviour
 			cameraOffset = cameraOffset.normalized * distance;
 		}
 
-		// Posicionament de la càmera
+		// Posicionament de la càmera segons la rotació i la distància
 		Quaternion rotation = Quaternion.Euler(rotationY, rotationX, 0f);
 		Vector3 offset = rotation * Vector3.forward * cameraOffset.magnitude;
 
 		mainCamera.transform.position = lookAt - offset;
 		mainCamera.transform.LookAt(lookAt);
 
+		// Desplaçament lateral amb clic del mig del ratolí
 		if (Input.GetMouseButton(2))
 		{
 			float panSpeed = cameraOffset.magnitude * 0.012f;
@@ -100,7 +106,7 @@ public class PlanetHUD : MonoBehaviour
 			lookAt += moveCam;
 		}
 
-		// Moviment amb WASD
+		// Moviment amb teclat WASD
 		Vector3 move = Vector3.zero;
 		if (Input.GetKey(KeyCode.W)) move += mainCamera.transform.forward;
 		if (Input.GetKey(KeyCode.S)) move -= mainCamera.transform.forward;
