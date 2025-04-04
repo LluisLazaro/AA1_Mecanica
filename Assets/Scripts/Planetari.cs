@@ -50,7 +50,7 @@ public class Planetari : MonoBehaviour
         planetVelocity = initialVelocity;
 
 		// Col·loca el planeta visualment en una posició escalar per a millor visibilitat
-		transform.position = initialPosition * 2f;
+		transform.position = initialPosition * 20f;
     }
 
 	// Assigna l'acceleració total (calculada pel PlanetManager) que actuarà sobre aquest planeta
@@ -66,7 +66,7 @@ public class Planetari : MonoBehaviour
 		(planetPosition, planetVelocity, time) = RungeKutta4(planetPosition, planetVelocity, time);
 
 		// Actualitza la posició visual del planeta amb un factor d’escala per fer-lo visible a Unity
-		transform.position = planetPosition * 10f;
+		transform.position = planetPosition * 20f;
     }
 
 	// Implementa el mètode de Runge-Kutta d'ordre 4 per calcular el següent estat físic del planeta

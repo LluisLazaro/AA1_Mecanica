@@ -32,6 +32,18 @@ public class PlanetHUD : MonoBehaviour
 
 		cameraOffset = initialOffset;
 
+		// Establim la posició i rotació exactes de la càmera al començar
+		mainCamera.transform.position = new Vector3(-25.0f, 25.0f, -25.0f);
+		mainCamera.transform.rotation = Quaternion.Euler(28.7f, 45.0f, 0f);
+
+		lookAt = Vector3.zero;
+
+		cameraOffset = lookAt - mainCamera.transform.position;
+
+		Vector3 angles = mainCamera.transform.rotation.eulerAngles;
+		rotationY = angles.x;
+		rotationX = angles.y;
+
 		float initialDistance = cameraOffset.magnitude;
 		if (maxZoom < initialDistance)
 			maxZoom = initialDistance + 500f;
